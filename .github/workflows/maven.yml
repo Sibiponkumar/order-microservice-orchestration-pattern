@@ -2,24 +2,18 @@ name: Maven Build & Test
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    # ✅ DYNAMICALLY finds ALL Maven projects in repo
     strategy:
       matrix:
-        service: 
-          - name: order-service
-            path: /order-service
-          - name: inventory-service
-            path: /inventory-service
-          - name: payment-service
-            path: /payment-service
-          - name: shipment-service
-            path: /shipment-service
+        project: ${{ fromJson(needs.setup.outputs.matrix) }}
 
     steps:
     - name: 📥 Checkout code
@@ -32,10 +26,32 @@ jobs:
         distribution: 'temurin'
         cache: 'maven'
 
-    - name: 🧪 Test ${{ matrix.service.name }}
-      working-directory: ${{ matrix.service.path }}
-      run: mvn -B test
+    - name: 🧪 Test ${{ matrix.project }}
+      working-directory: ${{ matrix.project }}
+      run: |
+        echo "Testing in: $(pwd)"
+        ls -la
+        mvn -B test
 
-    - name: 📦 Build ${{ matrix.service.name }}
-      working-directory: ${{ matrix.service.path }}
+    - name: 📦 Build ${{ matrix.project }}
+      working-directory: ${{ matrix.project }}
       run: mvn -B package -DskipTests
+
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔍 Find Maven projects
+      id: set-matrix
+      run: |
+        echo "=== SCANNING FOR MAVEN PROJECTS ==="
+        find . -maxdepth 2 -type d -name "*-service" -exec test -f {}/pom.xml \; -print | sed 's|^\./||' | jq -R -s -c 'split("\n") | map(select(. != ""))' > matrix.json
+        
+        echo "Found projects:"
+        cat matrix.json
+        
+        echo "matrix=$(cat matrix.json)" >> $GITHUB_OUTPUT
