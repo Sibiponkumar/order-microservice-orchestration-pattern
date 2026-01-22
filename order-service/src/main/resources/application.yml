@@ -1,0 +1,57 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: order-service
+  datasource:
+    url: jdbc:h2:mem:testdb
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: order-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "*"
+management:
+  tracing:
+    kafka:
+      enabled: true
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: http://localhost:16686
+    endpoints:
+      web:
+        exposure:
+          include: health,info,prometheus
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+app:
+  topics:
+    order-created: order-created
+    inventory-result: inventory-result
+    payment-result: payment-result
+    shipment-result: shipment-result
+    order-outcome: order-outcome
+  services:
+    inventory: http://localhost:8081/api/inventory
+    payment: http://localhost:8082/api/payment
+    shipment: http://localhost:8083/api/shipment
+
+logging:
+  level:
+    root: INFO
+    org.springframework.kafka: DEBUG
+    com.example: DEBUG
+    org.springframework.web.reactive: DEBUG

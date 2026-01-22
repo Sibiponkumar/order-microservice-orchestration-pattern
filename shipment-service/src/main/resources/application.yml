@@ -1,0 +1,29 @@
+server:
+  port: 8083
+spring:
+  application:
+    name: shipment-service
+  jackson:
+    serialization:
+      INDENT_OUTPUT: true
+  mvc:
+    problemdetails:
+      enabled: true
+  main:
+    allow-bean-definition-overriding: true
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      group-id: shipment-group
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: http://localhost:16686

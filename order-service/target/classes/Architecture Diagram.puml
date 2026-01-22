@@ -1,0 +1,67 @@
+@startuml Order Microservices Architecture
+!theme aws-orange
+skinparam nodesep 60
+skinparam ranksep 70
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor #3498DB
+  BorderThickness 2
+}
+skinparam actor {
+  BackgroundColor #E1F5FE
+  BorderColor #0277BD
+}
+
+' Title Box
+title Order Microservices\n**Java 17 + Spring Boot 3.2 + Kafka 3.7.0**
+
+' External Client
+actor "Client\nSwagger/Postman" as client #E1F5FE
+
+' Main Orchestrator (FIXED PORT)
+package "ORDER SERVICE \n**Port:8080**" #E3F2FD {
+  rectangle "POST /api/orders\nSwagger UI" as order_api #BBDEFB
+  rectangle "OrderWorkflowService\nWebClient Calls" as order_svc #BBDEFB
+  rectangle "OrderEventConsumer\nKafka Listener" as order_kafka #BBDEFB
+}
+
+' Downstream Services
+rectangle "INVENTORY SERVICE\n**Port:8081**\n/api/inventory/check" as inventory #81C784
+rectangle "PAYMENT SERVICE\n**Port:8082**\n/api/payments/process" as payment #FFB74D
+rectangle "SHIPMENT SERVICE\n**Port:8083**\n/api/shipments" as shipment #F06292
+
+' Infrastructure
+package "MESSAGE BROKER & OBSERVABILITY" #FFF3E0 {
+  rectangle "KAFKA **9092**\norder-events\ntopic" as kafka #FFF9C4
+  rectangle "ZOOKEEPER\n**2181**" as zookeeper #FFCC80
+  rectangle "JAEGER **16686**\nOpenTelemetry\nDistributed Tracing" as jaeger #FFCCBC
+}
+
+' CRITICAL DATA FLOW (Based on OrderWorkflowService.java)
+client -.-> order_api : "1. POST /api/orders\nOrderRequest JSON"
+order_api -> order_svc : ""
+order_svc -> inventory : "2. WebClient POST\nInventoryRequest"
+order_svc -> payment : "3. WebClient POST\nPaymentRequest"
+order_svc -> shipment : "4. WebClient POST\nShipmentRequest"
+order_svc -> kafka : "6. KafkaTemplate.send()\nOrderEvent JSON"
+order_kafka <.-> kafka : "7. @KafkaListener\norder-events"
+
+' Distributed Tracing (ALL services)
+order_svc .-> jaeger : "OTLP gRPC/HTTP"
+inventory .-> jaeger : "OTLP"
+payment .-> jaeger : "OTLP"
+shipment .-> jaeger : "OTLP"
+
+' Docker Boundary
+cloud "DOCKER COMPOSE\n**docker-compose up**" as docker #E0F2F1 {
+  note right : All services + Kafka + Jaeger\nSingle command startup
+}
+
+note top of client
+  <b>Order request curl command:</b>
+  curl -X POST http://localhost:8081/api/orders \
+  -d '{"productId":"prod-123","quantity":2,"userId":"user-123"}'
+
+end note
+
+@enduml
