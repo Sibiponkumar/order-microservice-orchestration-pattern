@@ -1,4 +1,4 @@
-# Order Saga Microservices - Complete Reference Guide 🚀
+# Order Saga Microservices - Complete Reference
 
 Spring Boot 3.3+ Microservices with Saga Pattern, WebClient Orchestration, Kafka Events, Distributed Tracing & Full Observability
 
@@ -306,4 +306,5 @@ January 2026 \| Spring Boot 3.3+ Saga Pattern Demo 🎉
 ## 👨‍💻 Author & Credits
 
 **Built by Sibiponkumar Balaji**  
+
 *Senior Software Engineer | Backend Engineering | Microservices | AWS* 
