@@ -13,13 +13,13 @@ jobs:
       matrix:
         service: 
           - name: order-service
-            path: order-microservice-orchestration-pattern/order-service
+            path: /order-service
           - name: inventory-service
-            path: order-microservice-orchestration-pattern/inventory-service
+            path: /inventory-service
           - name: payment-service
-            path: order-microservice-orchestration-pattern/payment-service
+            path: /payment-service
           - name: shipment-service
-            path: order-microservice-orchestration-pattern/shipment-service
+            path: /shipment-service
 
     steps:
     - name: 📥 Checkout code
