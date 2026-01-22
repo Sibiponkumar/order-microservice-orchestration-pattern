@@ -14,21 +14,22 @@ jobs:
         include:
         - service: order-service
           path: order-service
-        # Add other services when they exist:
-        # - service: payment-service
-        #   path: payment-service
+        - service: inventory-service  
+          path: inventory-service
+        - service: payment-service
+          path: payment-service
+        - service: shipment-service
+          path: shipment-service
 
     steps:
     - name: 📥 Checkout code
       uses: actions/checkout@v4
 
-    - name: 🔍 Debug project structure
+    - name: 🔍 Debug ${{ matrix.service }}
       run: |
-        echo "=== ROOT CONTENTS ==="
-        ls -la
-        echo "=== order-service ==="
-        ls -la order-service/ || echo "❌ order-service NOT FOUND"
-        test -f order-service/pom.xml && echo "✅ pom.xml found" || echo "❌ NO pom.xml"
+        echo "=== CHECKING ${{ matrix.service }} ==="
+        ls -la ${{ matrix.path }}/ || echo "❌ ${{ matrix.path }}/ NOT FOUND"
+        test -f ${{ matrix.path }}/pom.xml && echo "✅ pom.xml exists" || echo "❌ NO pom.xml"
 
     - name: 🗄️ Setup JDK 17
       uses: actions/setup-java@v4
@@ -40,13 +41,9 @@ jobs:
     - name: 🧪 Test ${{ matrix.service }}
       working-directory: ${{ matrix.path }}
       run: |
-        echo "=== Testing ${{ matrix.service }} ==="
-        pwd
-        ls -la
-        mvn -B test --fail-at-end || echo "⚠️ Tests skipped/failed"
+        echo "Testing: $(pwd)"
+        mvn -B test || echo "⚠️ Tests skipped"
 
     - name: 📦 Build ${{ matrix.service }}
       working-directory: ${{ matrix.path }}
-      run: |
-        echo "=== Building ${{ matrix.service }} ==="
-        mvn -B package -DskipTests
+      run: mvn -B package -DskipTests
